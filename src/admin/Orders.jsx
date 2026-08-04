@@ -10,7 +10,9 @@ export default function Orders() {
 
   const fetchOrders = async () => {
     try {
-      const res = await axios.get("https://aquadude-backend.onrender.com/api/orders");
+      const res = await axios.get(
+        "https://aquadude-backend.onrender.com/api/orders"
+      );
       setOrders(res.data.data);
     } catch (err) {
       console.log(err);
@@ -19,7 +21,9 @@ export default function Orders() {
 
   const markDelivered = async (id) => {
     try {
-      await axios.put(`https://aquadude-backend.onrender.com/api/orders/${id}`);
+      await axios.put(
+        `https://aquadude-backend.onrender.com/api/orders/${id}`
+      );
 
       fetchOrders();
     } catch (err) {
@@ -50,7 +54,9 @@ export default function Orders() {
             <th>Phone</th>
             <th>Address</th>
             <th>Product</th>
-            <th>Price</th>
+            <th>Quantity</th>
+            <th>Price / Unit</th>
+            <th>Total Price</th>
             <th>Status</th>
             <th>Action</th>
           </tr>
@@ -63,7 +69,18 @@ export default function Orders() {
               <td>{order.phone}</td>
               <td>{order.address}</td>
               <td>{order.product}</td>
+
+              <td>{order.quantity}</td>
+
               <td>₹{order.price}</td>
+
+              <td>
+                ₹
+                {order.totalPrice
+                  ? order.totalPrice
+                  : order.price * order.quantity}
+              </td>
+
               <td>{order.status}</td>
 
               <td>
