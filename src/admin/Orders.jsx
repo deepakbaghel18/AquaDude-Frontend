@@ -18,10 +18,11 @@ export default function Orders() {
 
       setOrders(res.data.data || []);
     } catch (err) {
-      console.log(err);
+      console.log("Failed to fetch orders:", err);
     }
   };
 
+  // Mark order as delivered
   const markDelivered = async (id) => {
     try {
       await axios.put(
@@ -30,10 +31,33 @@ export default function Orders() {
 
       fetchOrders();
     } catch (err) {
-      console.log(err);
+      console.log("Failed to update order:", err);
     }
   };
 
+  // Delete order
+  const deleteOrder = async (id) => {
+    const confirmDelete = window.confirm(
+      "Are you sure you want to delete this order?"
+    );
+
+    if (!confirmDelete) {
+      return;
+    }
+
+    try {
+      await axios.delete(
+        `https://aquadude-backend.onrender.com/api/orders/${id}`
+      );
+
+      fetchOrders();
+    } catch (err) {
+      console.log("Failed to delete order:", err);
+      alert("Failed to delete order");
+    }
+  };
+
+  // Search + status filter
   const filteredOrders = orders.filter((order) => {
     const searchText = search.toLowerCase();
 
@@ -103,6 +127,8 @@ export default function Orders() {
           }}
         >
           <tr>
+            <th>Order ID</th>
+            <th>Date & Time</th>
             <th>Name</th>
             <th>Phone</th>
             <th>Address</th>
@@ -118,13 +144,34 @@ export default function Orders() {
         <tbody>
           {filteredOrders.map((order) => (
             <tr key={order._id}>
+              {/* Order ID */}
+              <td
+                style={{
+                  fontSize: "13px",
+                  fontWeight: "bold",
+                }}
+              >
+                #{order._id.slice(-6).toUpperCase()}
+              </td>
+
+              {/* Date & Time */}
+              <td>
+                {order.createdAt
+                  ? new Date(order.createdAt).toLocaleString("en-IN")
+                  : "N/A"}
+              </td>
+
+              {/* Customer details */}
               <td>{order.name}</td>
               <td>{order.phone}</td>
               <td>{order.address}</td>
+
+              {/* Product */}
               <td>{order.product}</td>
               <td>{order.quantity}</td>
               <td>₹{order.price}</td>
 
+              {/* Total */}
               <td>
                 ₹
                 {order.totalPrice
@@ -132,32 +179,58 @@ export default function Orders() {
                   : order.price * order.quantity}
               </td>
 
+              {/* Status */}
               <td>{order.status}</td>
 
+              {/* Actions */}
               <td>
-                {order.status === "Pending" ? (
+                <div
+                  style={{
+                    display: "flex",
+                    gap: "8px",
+                    justifyContent: "center",
+                    alignItems: "center",
+                  }}
+                >
+                  {order.status === "Pending" ? (
+                    <button
+                      onClick={() => markDelivered(order._id)}
+                      style={{
+                        padding: "8px 15px",
+                        background: "#16a34a",
+                        color: "white",
+                        border: "none",
+                        borderRadius: "6px",
+                        cursor: "pointer",
+                      }}
+                    >
+                      Deliver
+                    </button>
+                  ) : (
+                    <span>✅ Delivered</span>
+                  )}
+
                   <button
-                    onClick={() => markDelivered(order._id)}
+                    onClick={() => deleteOrder(order._id)}
                     style={{
                       padding: "8px 15px",
-                      background: "#16a34a",
+                      background: "#dc2626",
                       color: "white",
                       border: "none",
                       borderRadius: "6px",
                       cursor: "pointer",
                     }}
                   >
-                    Deliver
+                    Delete
                   </button>
-                ) : (
-                  "✅ Delivered"
-                )}
+                </div>
               </td>
             </tr>
           ))}
         </tbody>
       </table>
 
+      {/* No orders */}
       {filteredOrders.length === 0 && (
         <p style={{ marginTop: "20px" }}>
           No orders found.
