@@ -3,7 +3,10 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Home from "./pages/Home";
 import ProductsPage from "./pages/ProductsPage";
 import ContactPage from "./pages/ContactPage";
+
 import Admin from "./admin/Admin";
+import Login from "./admin/Login";
+import ProtectedRoute from "./admin/ProtectedRoute";
 
 function App() {
   return (
@@ -15,7 +18,16 @@ function App() {
 
         <Route path="/contact" element={<ContactPage />} />
 
-        <Route path="/admin" element={<Admin />} />
+        <Route path="/admin/login" element={<Login />} />
+
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute>
+              <Admin />
+            </ProtectedRoute>
+          }
+        />
       </Routes>
     </BrowserRouter>
   );
