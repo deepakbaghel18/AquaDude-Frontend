@@ -3,6 +3,8 @@ import axios from "axios";
 
 export default function Orders() {
   const [orders, setOrders] = useState([]);
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("All");
 
   useEffect(() => {
     fetchOrders();
@@ -13,7 +15,8 @@ export default function Orders() {
       const res = await axios.get(
         "https://aquadude-backend.onrender.com/api/orders"
       );
-      setOrders(res.data.data);
+
+      setOrders(res.data.data || []);
     } catch (err) {
       console.log(err);
     }
@@ -31,10 +34,60 @@ export default function Orders() {
     }
   };
 
+  const filteredOrders = orders.filter((order) => {
+    const searchText = search.toLowerCase();
+
+    const matchesSearch =
+      order.name?.toLowerCase().includes(searchText) ||
+      order.phone?.toLowerCase().includes(searchText) ||
+      order.product?.toLowerCase().includes(searchText);
+
+    const matchesStatus =
+      statusFilter === "All" ||
+      order.status === statusFilter;
+
+    return matchesSearch && matchesStatus;
+  });
+
   return (
     <div style={{ marginTop: "40px" }}>
       <h2>Customer Orders</h2>
 
+      {/* Search */}
+      <input
+        type="text"
+        placeholder="Search by name, phone or product..."
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        style={{
+          width: "100%",
+          padding: "12px",
+          marginTop: "15px",
+          border: "1px solid #ccc",
+          borderRadius: "8px",
+          fontSize: "16px",
+          boxSizing: "border-box",
+        }}
+      />
+
+      {/* Status Filter */}
+      <select
+        value={statusFilter}
+        onChange={(e) => setStatusFilter(e.target.value)}
+        style={{
+          marginTop: "10px",
+          padding: "12px",
+          border: "1px solid #ccc",
+          borderRadius: "8px",
+          fontSize: "16px",
+        }}
+      >
+        <option value="All">All Orders</option>
+        <option value="Pending">Pending</option>
+        <option value="Delivered">Delivered</option>
+      </select>
+
+      {/* Orders Table */}
       <table
         style={{
           width: "100%",
@@ -63,15 +116,13 @@ export default function Orders() {
         </thead>
 
         <tbody>
-          {orders.map((order) => (
+          {filteredOrders.map((order) => (
             <tr key={order._id}>
               <td>{order.name}</td>
               <td>{order.phone}</td>
               <td>{order.address}</td>
               <td>{order.product}</td>
-
               <td>{order.quantity}</td>
-
               <td>₹{order.price}</td>
 
               <td>
@@ -106,6 +157,12 @@ export default function Orders() {
           ))}
         </tbody>
       </table>
+
+      {filteredOrders.length === 0 && (
+        <p style={{ marginTop: "20px" }}>
+          No orders found.
+        </p>
+      )}
     </div>
   );
 }

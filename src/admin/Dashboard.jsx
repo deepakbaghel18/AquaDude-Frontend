@@ -2,81 +2,99 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 
 export default function Dashboard() {
-  const [totalOrders, setTotalOrders] = useState(0);
-  const [pendingOrders, setPendingOrders] = useState(0);
-  const [deliveredOrders, setDeliveredOrders] = useState(0);
+  const [orders, setOrders] = useState([]);
 
   useEffect(() => {
-    fetchDashboardData();
+    fetchOrders();
   }, []);
 
-  const fetchDashboardData = async () => {
+  const fetchOrders = async () => {
     try {
-      const res = await axios.get("https://aquadude-backend.onrender.com/api/orders");
-
-      const orders = res.data.data;
-
-      setTotalOrders(orders.length);
-
-      setPendingOrders(
-        orders.filter((order) => order.status === "Pending").length
+      const res = await axios.get(
+        "https://aquadude-backend.onrender.com/api/orders"
       );
 
-      setDeliveredOrders(
-        orders.filter((order) => order.status === "Delivered").length
-      );
-    } catch (err) {
-      console.log(err);
+      setOrders(res.data.data || []);
+    } catch (error) {
+      console.log("Failed to fetch orders:", error);
     }
   };
 
+  const totalOrders = orders.length;
+
+  const pendingOrders = orders.filter(
+    (order) => order.status === "Pending"
+  ).length;
+
+  const deliveredOrders = orders.filter(
+    (order) => order.status === "Delivered"
+  ).length;
+
+  const totalRevenue = orders.reduce(
+    (total, order) => total + Number(order.totalPrice || 0),
+    0
+  );
+
+  return (
+    <div>
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+          gap: "20px",
+        }}
+      >
+        <Card
+          title="Total Orders"
+          value={totalOrders}
+        />
+
+        <Card
+          title="Pending Orders"
+          value={pendingOrders}
+        />
+
+        <Card
+          title="Delivered Orders"
+          value={deliveredOrders}
+        />
+
+        <Card
+          title="Total Revenue"
+          value={`₹${totalRevenue}`}
+        />
+      </div>
+    </div>
+  );
+}
+
+function Card({ title, value }) {
   return (
     <div
       style={{
-        display: "flex",
-        gap: "20px",
-        marginBottom: "40px",
-        flexWrap: "wrap",
+        background: "white",
+        padding: "25px",
+        borderRadius: "12px",
+        boxShadow: "0 4px 15px rgba(0,0,0,0.08)",
       }}
     >
-      <div
+      <h3
         style={{
-          background: "#0284c7",
-          color: "white",
-          padding: "30px",
-          borderRadius: "15px",
-          width: "220px",
+          margin: 0,
+          color: "#555",
         }}
       >
-        <h3>Total Orders</h3>
-        <h1>{totalOrders}</h1>
-      </div>
+        {title}
+      </h3>
 
-      <div
+      <h1
         style={{
-          background: "#16a34a",
-          color: "white",
-          padding: "30px",
-          borderRadius: "15px",
-          width: "220px",
+          marginTop: "15px",
+          color: "#0284c7",
         }}
       >
-        <h3>Delivered</h3>
-        <h1>{deliveredOrders}</h1>
-      </div>
-
-      <div
-        style={{
-          background: "#f59e0b",
-          color: "white",
-          padding: "30px",
-          borderRadius: "15px",
-          width: "220px",
-        }}
-      >
-        <h3>Pending</h3>
-        <h1>{pendingOrders}</h1>
-      </div>
+        {value}
+      </h1>
     </div>
   );
 }
