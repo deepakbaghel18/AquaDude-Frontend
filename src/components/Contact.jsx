@@ -2,90 +2,48 @@ import { useState } from "react";
 import axios from "axios";
 
 export default function Contact() {
-  const products = [
-  {
-    name: "20L Alkaline Water",
-    price: 450,
-  },
-  {
-    name: "10L Alkaline Water",
-    price: 350,
-  },
-  {
-    name: "5L Premium Water",
-    price: 200,
-  },
-];
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [address, setAddress] = useState("");
 
-  const [form, setForm] = useState({
-    name: "",
-    phone: "",
-    address: "",
-    product: products[0].name,
-    quantity: 1,
-    price: products[0].price,
-  });
+  const [order, setOrder] = useState(null);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleChange = (e) => {
-    if (e.target.name === "product") {
-      const selected = products.find(
-        (p) => p.name === e.target.value
-      );
-
-      setForm({
-        ...form,
-        product: selected.name,
-        price: selected.price,
-      });
-    } else {
-      setForm({
-        ...form,
-        [e.target.name]: e.target.value,
-      });
+  const placeOrder = async () => {
+    if (!name || !phone || !address) {
+      setError("Please fill all the details.");
+      return;
     }
-  };
 
-  const increaseQty = () => {
-    setForm({
-      ...form,
-      quantity: form.quantity + 1,
-    });
-  };
-
-  const decreaseQty = () => {
-    if (form.quantity > 1) {
-      setForm({
-        ...form,
-        quantity: form.quantity - 1,
-      });
-    }
-  };
-
-  const totalPrice = form.quantity * form.price;
-
-  const handleSubmit = async () => {
     try {
+      setLoading(true);
+      setError("");
+      setOrder(null);
+
       const res = await axios.post(
-        "http://localhost:5000/api/orders",
+        "https://aquadude-backend.onrender.com/api/orders",
         {
-          ...form,
-          totalPrice,
+          name,
+          phone,
+          address,
+          product: "20L Alkaline Water",
+          quantity: 1,
+          price: 250,
         }
       );
 
-      alert(res.data.message);
+      setOrder(res.data.data);
 
-      setForm({
-        name: "",
-        phone: "",
-        address: "",
-        product: products[0].name,
-        quantity: 1,
-        price: products[0].price,
-      });
+      // Clear form
+      setName("");
+      setPhone("");
+      setAddress("");
     } catch (err) {
       console.log(err);
-      alert("Failed to Place Order");
+      setError("Failed to place order. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -93,177 +51,141 @@ export default function Contact() {
     <section
       id="contact"
       style={{
-        padding: "80px 20px",
-        background: "#eef8ff",
+        padding: "80px 40px",
+        background: "#ffffff",
+        textAlign: "center",
       }}
     >
-      <div
-        style={{
-          maxWidth: "700px",
-          margin: "auto",
-          background: "#fff",
-          borderRadius: "15px",
-          padding: "40px",
-          boxShadow: "0 5px 20px rgba(0,0,0,.1)",
-        }}
-      >
-        <h2
-          style={{
-            textAlign: "center",
-            marginBottom: "30px",
-          }}
-        >
-          🛒 Place Your Order
-        </h2>
-
-        <label>Choose Product</label>
-
-        <select
-          name="product"
-          value={form.product}
-          onChange={handleChange}
-          style={inputStyle}
-        >
-          {products.map((item) => (
-            <option
-              key={item.name}
-              value={item.name}
-            >
-              {item.name} - ₹{item.price}
-            </option>
-          ))}
-        </select>
-
-        <div
-          style={{
-            marginTop: "20px",
-          }}
-        >
-          <h3>Quantity</h3>
+      {!order ? (
+        <>
+          <h2 style={{ fontSize: "42px" }}>
+            Place Your Order
+          </h2>
 
           <div
             style={{
+              maxWidth: "600px",
+              margin: "40px auto",
               display: "flex",
-              alignItems: "center",
-              gap: "15px",
+              flexDirection: "column",
+              gap: "20px",
             }}
           >
-            <button
-              onClick={decreaseQty}
-              style={qtyBtn}
-            >
-              -
-            </button>
+            <input
+              type="text"
+              placeholder="Full Name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              style={inputStyle}
+            />
 
-            <h2>{form.quantity}</h2>
+            <input
+              type="tel"
+              placeholder="Phone Number"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              style={inputStyle}
+            />
+
+            <textarea
+              rows="4"
+              placeholder="Delivery Address"
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
+              style={inputStyle}
+            />
+
+            {error && (
+              <p style={{ color: "red" }}>
+                {error}
+              </p>
+            )}
 
             <button
-              onClick={increaseQty}
-              style={qtyBtn}
+              onClick={placeOrder}
+              disabled={loading}
+              style={buttonStyle}
             >
-              +
+              {loading ? "Placing Order..." : "Place Order"}
             </button>
           </div>
-        </div>
-
+        </>
+      ) : (
         <div
           style={{
-            marginTop: "20px",
-            background: "#f4f4f4",
-            padding: "20px",
-            borderRadius: "10px",
+            maxWidth: "600px",
+            margin: "40px auto",
+            padding: "30px",
+            borderRadius: "15px",
+            boxShadow: "0 4px 15px rgba(0,0,0,0.1)",
+            background: "#f8fafc",
           }}
         >
-          <h3>Order Summary</h3>
+          <h2 style={{ color: "#16a34a" }}>
+            🎉 Order Placed Successfully!
+          </h2>
 
-          <p>
-            <b>Product:</b> {form.product}
-          </p>
-
-          <p>
-            <b>Price:</b> ₹{form.price}
-          </p>
-
-          <p>
-            <b>Quantity:</b> {form.quantity}
-          </p>
-
-          <h2
+          <p
             style={{
-              color: "#0284c7",
+              marginTop: "25px",
+              fontSize: "18px",
             }}
           >
-            Total : ₹{totalPrice}
-          </h2>
+            Your Order ID:
+          </p>
+
+          <h1
+            style={{
+              color: "#0284c7",
+              letterSpacing: "2px",
+            }}
+          >
+            {order.orderId}
+          </h1>
+
+          <p>
+            Please save this Order ID to track your delivery.
+          </p>
+
+          <p>
+            <strong>Product:</strong> {order.product}
+          </p>
+
+          <p>
+            <strong>Quantity:</strong> {order.quantity}
+          </p>
+
+          <p>
+            <strong>Total:</strong> ₹{order.totalPrice}
+          </p>
+
+          <button
+            onClick={() => {
+              window.location.href = "/track-order";
+            }}
+            style={buttonStyle}
+          >
+            Track My Order
+          </button>
         </div>
-
-        <input
-          type="text"
-          placeholder="Full Name"
-          name="name"
-          value={form.name}
-          onChange={handleChange}
-          style={inputStyle}
-        />
-
-        <input
-          type="text"
-          placeholder="Phone Number"
-          name="phone"
-          value={form.phone}
-          onChange={handleChange}
-          style={inputStyle}
-        />
-
-        <textarea
-          rows="4"
-          placeholder="Delivery Address"
-          name="address"
-          value={form.address}
-          onChange={handleChange}
-          style={inputStyle}
-        />
-
-        <button
-          onClick={handleSubmit}
-          style={buttonStyle}
-        >
-          Place Order • ₹{totalPrice}
-        </button>
-      </div>
+      )}
     </section>
   );
 }
 
 const inputStyle = {
-  width: "100%",
   padding: "15px",
-  marginTop: "20px",
   borderRadius: "10px",
   border: "1px solid #ccc",
   fontSize: "16px",
-  boxSizing: "border-box",
 };
 
 const buttonStyle = {
-  width: "100%",
-  marginTop: "25px",
-  padding: "16px",
+  padding: "15px",
   background: "#0284c7",
-  color: "#fff",
+  color: "white",
   border: "none",
-  borderRadius: "10px",
+  borderRadius: "30px",
   fontSize: "18px",
-  cursor: "pointer",
-};
-
-const qtyBtn = {
-  width: "45px",
-  height: "45px",
-  border: "none",
-  background: "#0284c7",
-  color: "#fff",
-  fontSize: "22px",
-  borderRadius: "50%",
   cursor: "pointer",
 };

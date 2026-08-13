@@ -1,3 +1,4 @@
+import TrackOrder from "./pages/TrackOrder";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import Home from "./pages/Home";
@@ -12,6 +13,7 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
+      <Route path="/track-order" element={<TrackOrder />} />
         <Route path="/" element={<Home />} />
 
         <Route path="/products" element={<ProductsPage />} />
