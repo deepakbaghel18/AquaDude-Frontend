@@ -18,32 +18,32 @@ export default function Orders() {
 
       setOrders(res.data.data || []);
     } catch (err) {
-      console.log("Failed to fetch orders:", err);
+      console.log(err);
     }
   };
 
-  // Mark order as delivered
-  const markDelivered = async (id) => {
+  const updateStatus = async (id, status) => {
     try {
       await axios.put(
-        `https://aquadude-backend.onrender.com/api/orders/${id}`
+        `https://aquadude-backend.onrender.com/api/orders/${id}`,
+        {
+          status,
+        }
       );
 
       fetchOrders();
     } catch (err) {
-      console.log("Failed to update order:", err);
+      console.log(err);
+      alert("Failed to update order status");
     }
   };
 
-  // Delete order
   const deleteOrder = async (id) => {
     const confirmDelete = window.confirm(
       "Are you sure you want to delete this order?"
     );
 
-    if (!confirmDelete) {
-      return;
-    }
+    if (!confirmDelete) return;
 
     try {
       await axios.delete(
@@ -52,19 +52,19 @@ export default function Orders() {
 
       fetchOrders();
     } catch (err) {
-      console.log("Failed to delete order:", err);
+      console.log(err);
       alert("Failed to delete order");
     }
   };
 
-  // Search + status filter
   const filteredOrders = orders.filter((order) => {
     const searchText = search.toLowerCase();
 
     const matchesSearch =
       order.name?.toLowerCase().includes(searchText) ||
       order.phone?.toLowerCase().includes(searchText) ||
-      order.product?.toLowerCase().includes(searchText);
+      order.product?.toLowerCase().includes(searchText) ||
+      order.orderId?.toLowerCase().includes(searchText);
 
     const matchesStatus =
       statusFilter === "All" ||
@@ -73,14 +73,39 @@ export default function Orders() {
     return matchesSearch && matchesStatus;
   });
 
+  const getStatusStyle = (status) => {
+    if (status === "Delivered") {
+      return {
+        color: "#16a34a",
+        fontWeight: "bold",
+      };
+    }
+
+    if (status === "Out for Delivery") {
+      return {
+        color: "#2563eb",
+        fontWeight: "bold",
+      };
+    }
+
+    return {
+      color: "#f59e0b",
+      fontWeight: "bold",
+    };
+  };
+
   return (
-    <div style={{ marginTop: "40px" }}>
+    <div
+      style={{
+        marginTop: "40px",
+      }}
+    >
       <h2>Customer Orders</h2>
 
       {/* Search */}
       <input
         type="text"
-        placeholder="Search by name, phone or product..."
+        placeholder="Search by Order ID, name, phone or product..."
         value={search}
         onChange={(e) => setSearch(e.target.value)}
         style={{
@@ -108,129 +133,177 @@ export default function Orders() {
       >
         <option value="All">All Orders</option>
         <option value="Pending">Pending</option>
+        <option value="Out for Delivery">
+          Out for Delivery
+        </option>
         <option value="Delivered">Delivered</option>
       </select>
 
       {/* Orders Table */}
-      <table
+      <div
         style={{
           width: "100%",
-          borderCollapse: "collapse",
-          marginTop: "20px",
+          overflowX: "auto",
         }}
-        border="1"
       >
-        <thead
+        <table
           style={{
-            background: "#0284c7",
-            color: "white",
+            width: "100%",
+            minWidth: "1200px",
+            borderCollapse: "collapse",
+            marginTop: "20px",
           }}
+          border="1"
         >
-          <tr>
-            <th>Order ID</th>
-            <th>Date & Time</th>
-            <th>Name</th>
-            <th>Phone</th>
-            <th>Address</th>
-            <th>Product</th>
-            <th>Quantity</th>
-            <th>Price / Unit</th>
-            <th>Total Price</th>
-            <th>Status</th>
-            <th>Action</th>
-          </tr>
-        </thead>
+          <thead
+            style={{
+              background: "#0284c7",
+              color: "white",
+            }}
+          >
+            <tr>
+              <th>Order ID</th>
+              <th>Date & Time</th>
+              <th>Name</th>
+              <th>Phone</th>
+              <th>Address</th>
+              <th>Product</th>
+              <th>Quantity</th>
+              <th>Price / Unit</th>
+              <th>Total Price</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
 
-        <tbody>
-          {filteredOrders.map((order) => (
-            <tr key={order._id}>
-              {/* Order ID */}
-              <td
-                style={{
-                  fontSize: "13px",
-                  fontWeight: "bold",
-                }}
-              >
-                #{order._id.slice(-6).toUpperCase()}
-              </td>
-
-              {/* Date & Time */}
-              <td>
-                {order.createdAt
-                  ? new Date(order.createdAt).toLocaleString("en-IN")
-                  : "N/A"}
-              </td>
-
-              {/* Customer details */}
-              <td>{order.name}</td>
-              <td>{order.phone}</td>
-              <td>{order.address}</td>
-
-              {/* Product */}
-              <td>{order.product}</td>
-              <td>{order.quantity}</td>
-              <td>₹{order.price}</td>
-
-              {/* Total */}
-              <td>
-                ₹
-                {order.totalPrice
-                  ? order.totalPrice
-                  : order.price * order.quantity}
-              </td>
-
-              {/* Status */}
-              <td>{order.status}</td>
-
-              {/* Actions */}
-              <td>
-                <div
+          <tbody>
+            {filteredOrders.map((order) => (
+              <tr key={order._id}>
+                <td
                   style={{
-                    display: "flex",
-                    gap: "8px",
-                    justifyContent: "center",
-                    alignItems: "center",
+                    fontSize: "13px",
+                    fontWeight: "bold",
                   }}
                 >
-                  {order.status === "Pending" ? (
+                  {order.orderId
+                    ? order.orderId
+                    : `#${order._id.slice(-6).toUpperCase()}`}
+                </td>
+
+                <td>
+                  {order.createdAt
+                    ? new Date(
+                        order.createdAt
+                      ).toLocaleString("en-IN")
+                    : "N/A"}
+                </td>
+
+                <td>{order.name}</td>
+                <td>{order.phone}</td>
+                <td>{order.address}</td>
+                <td>{order.product}</td>
+                <td>{order.quantity}</td>
+                <td>₹{order.price}</td>
+
+                <td>
+                  ₹
+                  {order.totalPrice
+                    ? order.totalPrice
+                    : order.price * order.quantity}
+                </td>
+
+                <td style={getStatusStyle(order.status)}>
+                  {order.status === "Pending" && "🟡 "}
+                  {order.status === "Out for Delivery" && "🔵 "}
+                  {order.status === "Delivered" && "🟢 "}
+                  {order.status}
+                </td>
+
+                <td>
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: "8px",
+                      flexWrap: "wrap",
+                      justifyContent: "center",
+                    }}
+                  >
+                    {order.status === "Pending" && (
+                      <button
+                        onClick={() =>
+                          updateStatus(
+                            order._id,
+                            "Out for Delivery"
+                          )
+                        }
+                        style={{
+                          padding: "8px 12px",
+                          background: "#2563eb",
+                          color: "white",
+                          border: "none",
+                          borderRadius: "6px",
+                          cursor: "pointer",
+                        }}
+                      >
+                        Out for Delivery
+                      </button>
+                    )}
+
+                    {order.status === "Out for Delivery" && (
+                      <button
+                        onClick={() =>
+                          updateStatus(
+                            order._id,
+                            "Delivered"
+                          )
+                        }
+                        style={{
+                          padding: "8px 12px",
+                          background: "#16a34a",
+                          color: "white",
+                          border: "none",
+                          borderRadius: "6px",
+                          cursor: "pointer",
+                        }}
+                      >
+                        Mark Delivered
+                      </button>
+                    )}
+
+                    {order.status === "Delivered" && (
+                      <span
+                        style={{
+                          color: "#16a34a",
+                          fontWeight: "bold",
+                        }}
+                      >
+                        ✅ Delivered
+                      </span>
+                    )}
+
                     <button
-                      onClick={() => markDelivered(order._id)}
+                      onClick={() =>
+                        deleteOrder(order._id)
+                      }
                       style={{
-                        padding: "8px 15px",
-                        background: "#16a34a",
+                        padding: "8px 12px",
+                        background: "#dc2626",
                         color: "white",
                         border: "none",
                         borderRadius: "6px",
                         cursor: "pointer",
                       }}
                     >
-                      Deliver
+                      Delete
                     </button>
-                  ) : (
-                    <span>✅ Delivered</span>
-                  )}
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
 
-                  <button
-                    onClick={() => deleteOrder(order._id)}
-                    style={{
-                      padding: "8px 15px",
-                      background: "#dc2626",
-                      color: "white",
-                      border: "none",
-                      borderRadius: "6px",
-                      cursor: "pointer",
-                    }}
-                  >
-                    Delete
-                  </button>
-                </div>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-
-      {/* No orders */}
       {filteredOrders.length === 0 && (
         <p style={{ marginTop: "20px" }}>
           No orders found.

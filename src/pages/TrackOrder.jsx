@@ -37,15 +37,45 @@ export default function TrackOrder() {
     }
   };
 
+  const getStatusText = () => {
+    if (order.status === "Delivered") {
+      return "🟢 Delivered";
+    }
+
+    if (order.status === "Out for Delivery") {
+      return "🔵 Out for Delivery";
+    }
+
+    return "🟡 Order Received";
+  };
+
+  const getStatusColor = () => {
+    if (order.status === "Delivered") {
+      return "#16a34a";
+    }
+
+    if (order.status === "Out for Delivery") {
+      return "#2563eb";
+    }
+
+    return "#f59e0b";
+  };
+
   return (
     <div
       style={{
         maxWidth: "600px",
         margin: "50px auto",
         padding: "20px",
+        minHeight: "70vh",
       }}
     >
-      <h1 style={{ color: "#0284c7" }}>
+      <h1
+        style={{
+          color: "#0284c7",
+          marginBottom: "10px",
+        }}
+      >
         💧 Track Your Order
       </h1>
 
@@ -79,15 +109,21 @@ export default function TrackOrder() {
           color: "white",
           border: "none",
           borderRadius: "8px",
-          cursor: "pointer",
+          cursor: loading ? "not-allowed" : "pointer",
           fontSize: "16px",
+          opacity: loading ? 0.7 : 1,
         }}
       >
         {loading ? "Searching..." : "Track Order"}
       </button>
 
       {error && (
-        <p style={{ color: "red", marginTop: "20px" }}>
+        <p
+          style={{
+            color: "red",
+            marginTop: "20px",
+          }}
+        >
           {error}
         </p>
       )}
@@ -98,26 +134,37 @@ export default function TrackOrder() {
             marginTop: "30px",
             padding: "25px",
             background: "#ffffff",
+            color: "#111111",
             borderRadius: "12px",
             boxShadow: "0 4px 15px rgba(0,0,0,0.1)",
           }}
         >
-          <h2>Order Details</h2>
+          <h2
+            style={{
+              marginTop: 0,
+            }}
+          >
+            Order Details
+          </h2>
 
           <p>
-            <strong>Order ID:</strong> {order.orderId}
+            <strong>Order ID:</strong>{" "}
+            {order.orderId || "N/A"}
           </p>
 
           <p>
-            <strong>Product:</strong> {order.product}
+            <strong>Product:</strong>{" "}
+            {order.product || "N/A"}
           </p>
 
           <p>
-            <strong>Quantity:</strong> {order.quantity}
+            <strong>Quantity:</strong>{" "}
+            {order.quantity || 0}
           </p>
 
           <p>
-            <strong>Total:</strong> ₹{order.totalPrice}
+            <strong>Total:</strong>{" "}
+            ₹{order.totalPrice || 0}
           </p>
 
           <p>
@@ -127,7 +174,12 @@ export default function TrackOrder() {
               : "N/A"}
           </p>
 
-          <h3 style={{ marginTop: "25px" }}>
+          <h3
+            style={{
+              marginTop: "25px",
+              marginBottom: "10px",
+            }}
+          >
             Status
           </h3>
 
@@ -135,15 +187,11 @@ export default function TrackOrder() {
             style={{
               fontSize: "20px",
               fontWeight: "bold",
-              color:
-                order.status === "Delivered"
-                  ? "#16a34a"
-                  : "#f59e0b",
+              color: getStatusColor(),
+              marginTop: 0,
             }}
           >
-            {order.status === "Delivered"
-              ? "🟢 Delivered"
-              : "🟡 Order Received"}
+            {getStatusText()}
           </p>
         </div>
       )}
