@@ -6,9 +6,22 @@ export default function Contact() {
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
 
+  const [quantity, setQuantity] = useState(1);
+
   const [order, setOrder] = useState(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const price = 250;
+  const totalPrice = quantity * price;
+
+  const increaseQuantity = () => {
+    setQuantity((prev) => prev + 1);
+  };
+
+  const decreaseQuantity = () => {
+    setQuantity((prev) => (prev > 1 ? prev - 1 : 1));
+  };
 
   const placeOrder = async () => {
     if (!name || !phone || !address) {
@@ -28,17 +41,17 @@ export default function Contact() {
           phone,
           address,
           product: "20L Alkaline Water",
-          quantity: 1,
-          price: 250,
+          quantity,
+          price,
         }
       );
 
       setOrder(res.data.data);
 
-      // Clear form
       setName("");
       setPhone("");
       setAddress("");
+      setQuantity(1);
     } catch (err) {
       console.log(err);
       setError("Failed to place order. Please try again.");
@@ -95,6 +108,66 @@ export default function Contact() {
               style={inputStyle}
             />
 
+            {/* Quantity */}
+            <div>
+              <h3 style={{ marginBottom: "10px" }}>
+                20L Alkaline Water
+              </h3>
+
+              <p
+                style={{
+                  marginBottom: "10px",
+                  color: "#555",
+                }}
+              >
+                Price: ₹{price} per can
+              </p>
+
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  gap: "20px",
+                }}
+              >
+                <button
+                  type="button"
+                  onClick={decreaseQuantity}
+                  style={quantityButtonStyle}
+                >
+                  −
+                </button>
+
+                <span
+                  style={{
+                    fontSize: "22px",
+                    fontWeight: "bold",
+                    minWidth: "30px",
+                  }}
+                >
+                  {quantity}
+                </span>
+
+                <button
+                  type="button"
+                  onClick={increaseQuantity}
+                  style={quantityButtonStyle}
+                >
+                  +
+                </button>
+              </div>
+
+              <h3
+                style={{
+                  marginTop: "15px",
+                  color: "#0284c7",
+                }}
+              >
+                Total: ₹{totalPrice}
+              </h3>
+            </div>
+
             {error && (
               <p style={{ color: "red" }}>
                 {error}
@@ -104,7 +177,10 @@ export default function Contact() {
             <button
               onClick={placeOrder}
               disabled={loading}
-              style={buttonStyle}
+              style={{
+                ...buttonStyle,
+                opacity: loading ? 0.7 : 1,
+              }}
             >
               {loading ? "Placing Order..." : "Place Order"}
             </button>
@@ -156,7 +232,15 @@ export default function Contact() {
           </p>
 
           <p>
+            <strong>Price / Unit:</strong> ₹{order.price}
+          </p>
+
+          <p>
             <strong>Total:</strong> ₹{order.totalPrice}
+          </p>
+
+          <p>
+            <strong>Status:</strong> 🟡 Order Received
           </p>
 
           <button
@@ -187,5 +271,16 @@ const buttonStyle = {
   border: "none",
   borderRadius: "30px",
   fontSize: "18px",
+  cursor: "pointer",
+};
+
+const quantityButtonStyle = {
+  width: "45px",
+  height: "45px",
+  borderRadius: "50%",
+  border: "none",
+  background: "#0284c7",
+  color: "white",
+  fontSize: "28px",
   cursor: "pointer",
 };
